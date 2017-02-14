@@ -1,0 +1,504 @@
+<!-- Chanelling Hans v1.8 
+Developed by Aman Dhingra
+Student ID:16200307
+University College Dublin-->
+
+<html lang="en" meta charset="UTF-8">
+
+<head>
+    <meta charset="utf-8">
+    <title>Information Visualization - Thank You Hans Rosling!</title>
+    <link href="./themes/prism.css" rel="stylesheet" />
+    <link href="./themes/tas_style.css" rel="stylesheet" />
+    <script type="text/javascript" src="D3/d3.v3.js" charset="utf-8"></script>
+    <script src="./lib/prism.js" charset="utf-8"></script>
+    <style type="text/css">
+        .axis path,
+        .axis line {
+            fill: none;
+            stroke: black;
+            shape-rendering: crispEdges;
+        }
+        /*CSS properties for the Year Text Floating on the graph*/
+        .year {
+            font-size: 170px;
+            font-family: monospace;
+            font-variant-numeric: proportional-nums;
+            opacity: 0.4
+        }
+        /*CSS properties for the Axis Texts ( Labels )*/
+        .axis text {
+            font-family: "Comic Sans MS", "Comic Sans", cursive;
+            font-size: 11px;
+        }
+        /*CSS properties for the class button-bar that has play/pause/reset buttons*/
+        .button-bar {
+            width: 500px;
+            margin-bottom: 20px;
+            display: flex;
+        }
+        /*CSS Properties for play button*/
+        .play_button {
+            float: left;
+            margin-left: 15px;
+            cursor: pointer;
+        }
+        /*CSS properties for pause_button*/
+        .pause_button {
+            flex-grow: 1;
+            cursor: pointer;
+            float: left;
+        }
+        /*CSS properties for reset_button*/
+        .reset_button {
+            flex-grow: 1;
+            cursor: pointer;
+            float: left;
+        }
+        /*CSS Slider Properties*/
+        .slider {
+            flex-grow: 1;
+            float: left;
+            cursor: pointer;
+            width: 700px;
+        }
+        /*Legend section division properties*/
+        .legend {
+            float: right;
+            margin-bottom: 20px;
+            height: 0;
+            padding-bottom: 1;
+            border-radius: 5;
+            border: 10px solid #cfdcec;
+            overflow: hidden;
+            background: #4679BD;
+            box-shadow: 0 0 3px gray;
+        }
+
+    </style>
+    <!-- End Of CSS Code -->
+    <!-- Java Script Code -->
+    <script type="text/javascript">
+    // Function called by Play/Pause/Reset Buttons on button_bar which passes id as a parameter onClick
+    // Showing the Pause Button and hiding the rest when Play is pressed.
+    // Showing the Play and Reset buttons when Pause has been pressed and then hiding the Pause button
+    // If reset has been pressed, all changes are reverted back to initial first stage
+        function do_change(id) {
+            if (id == 'play') {
+                document.getElementById("play").style.visibility = "hidden";
+                document.getElementById("pause").style.visibility = "visible";
+                document.getElementById("reset").style.visibility = "hidden";
+
+            } else if (id == 'pause') {
+                document.getElementById("pause").style.visibility = "hidden";
+                document.getElementById("play").style.visibility = "visible";
+                document.getElementById("reset").style.visibility = "visible";
+            } else if (id == 'reset') {
+                display_year = 1900;
+                document.getElementById("pause").style.visibility = "hidden";
+                document.getElementById("play").style.visibility = "visible";
+                regionSelect = '';
+                generateChart();
+                sliderchange(1900);
+                document.getElementById("year").value = "1900";
+                document.getElementById("reset").style.visibility = "hidden";
+            }
+
+        }
+    </script>
+    <h2>Gapminder.org</h2>
+</head>
+
+<body>
+	<!-- Button bar class for Play/Pause/Reset/Slider Sections -->
+    <div class="button-bar" style="display: table; position: absolute;width: 100%; ">
+    	<!-- Play Button Class -->
+        <div class="play_button">
+            <button type="submit" style="background-color:transparent; border-color:transparent;" id="play" onclick="do_change(this.id)" ;>
+                <img src="play_icon.jpg" style="height:20px;width:20px" alt="Submit">
+            </button>
+        </div>
+        <!-- Pause Button Class -->
+        <div class="pause_button">
+            <button type="submit" style="background-color:transparent; border-color:transparent;visibility: hidden;" id="pause" onclick="do_change(this.id)" ;>
+                <img src="pause_icon.jpg" style="height:17px;width:17px; border-radius:10px" alt="Submit">
+            </button>
+        </div>
+        <!-- Reset Button Class -->
+        <div class="reset_button">
+            <button type="submit" style="background-color:transparent; border-color:transparent;visibility: hidden;" id="reset" onclick="do_change(this.id)" ;>
+                <img src="reset_icon.png" style="height:20px;width:20px" alt="Submit">
+            </button>
+        </div>
+        <!-- Slider Section. Min=1900 Max=2015. Calls to "sliderchange()" function onClick and passes id as parameter -->
+        <div class="slider">
+            <input type="range" id="year" value="1900" min="1900" max="2015" oninput="sliderchange(this.value)" style="width: 550px" ;>
+        </div>
+    </div>
+    <!-- Legend Division Class for Legend Buttons and their respective colors and onClick activities -->
+    <!-- Calls to the legend() function onClick whcih would filter the data as per the region id passed in the parameter and display the visualization as per the selected filter -->
+    <div class="legend" style="display: table;">
+        <div class="blank" style="display: table-row; ">
+            Click Legend
+            <br>
+        </div>
+
+        <div class="leg" style="display: table-row;">
+            <button type="submit" value="ia" style="background-color:#ff0066; border-color:unset; width: 30px;height: 30px;" id="leg_asia" onclick="legend(value)" ;>
+
+            </button> Asia & Australia
+        </div>
+        <div class="leg" style="display: table-row;">
+            <button type="submit" value="Europe" style="background-color:#ffff80; border-color:unset;width: 30px;height: 30px;" id="leg_eu" onclick="legend(value)" ;>
+
+            </button> Europe
+        </div>
+        <div class="leg" style="display: table-row;">
+            <button type="submit" value="Africa" style="background-color:#4db8ff; border-color:unset; width: 30px;height: 30px;" id="leg_af" onclick="legend(value)" ;>
+
+            </button> Africa
+        </div>
+        <div class="leg" style="display: table-row;">
+            <button type="submit" value="America" style="background-color:#47d147; border-color:unset;width: 30px;height: 30px;" id="leg_am" onclick="legend(value)" ;>
+
+            </button> America
+        </div>
+
+
+
+<script type="text/javascript">
+    //Variables List
+    var margin = {
+        top: 50,
+        right: 20,
+        bottom: 45,
+        left: 50
+    };
+    var svg_outer_width = 700;
+    var svg_outer_height = 400;
+    var svg_width = svg_outer_width - margin.left - margin.right;
+    var svg_height = svg_outer_height - margin.top - margin.bottom;
+
+
+    //Creating SVG Element and storing it in the variable 'svg'
+    var svg = d3.select("body")
+        .append("svg")
+        .attr("width", svg_width + margin.left + margin.right)
+        .attr("height", svg_height + margin.top + margin.bottom)
+        .attr("class", "svgg")
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    // The initial year to display
+    display_year = 1900;
+
+    // Function to filter data by Year. Called by the generateChart() fucntion.
+    function yearFilter(value) {
+        return (value.Year == display_year)
+    }
+
+    // Log Scaling X-Axis Values
+    var xScale = d3.scale.log()
+        .domain([135, 183000])
+        .range([0, svg_width]);
+
+    // Linear Scaling Y-Axis Values
+    var yScale = d3.scale.linear()
+        .domain([15, 90])
+        .range([svg_height, 0]);
+
+    // Linear Scaling Population for Circle Radii
+    var rScale = d3.scale.linear()
+        .domain([15507, 1376048943])
+        .range([1.5, 45]);
+
+    //Define X axis
+    var xAxis = d3.svg.axis()
+        .scale(xScale)
+        .orient("bottom")
+        .ticks(8, d3.format(",d"));
+
+    // Text label for the x axis
+    svg.append("text")
+        .attr("x", svg_width / 3 + margin.left)
+        .attr("y", svg_height + margin.bottom - 5)
+        .style("text-anchor", "middle")
+        .attr("font-family", "Comic Sans Ms")
+        .text("Income per person, GDP/capita in $/year")
+        .attr("opacity", 0.5);
+
+    //Define Y axis
+    var yAxis = d3.svg.axis()
+        .scale(yScale)
+        .orient("left")
+        .ticks(5, d3.format(",d"));
+
+    //Text label for y-axis
+    svg.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 0 - margin.left)
+        .attr("x", 0 - (svg_height / 2))
+        .attr("dy", "1em")
+        .attr("opacity", 0.5)
+        .attr("font-family", "Comic Sans Ms")
+        .style("text-anchor", "middle")
+        .text("Life expectancy, years");
+
+
+    //Create X axis
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + svg_height + ")")
+        .call(xAxis);
+
+    //Create Y axis
+    svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis);
+
+    //Initialization of display_year text floating in the graph
+    svg.append("text")
+        .attr("y", svg_height / 1.5)
+        .attr("x", svg_width / 2)
+        .style("text-anchor", "middle")
+        .attr("id", "year")
+        .attr("class", "year")
+        .attr("opacity", 0.5)
+        .text(display_year);
+    // Ordinal Scaling of Regions on to Colors of circles.
+    var fill = d3.scale.ordinal()
+        .domain(["Asia", "Europe", "Africa", "North America", "South America", "Australia", "Central America", ])
+        .range(["#ff0066", "#ffff80", "#4db8ff", "#47d147", "#47d147", "#ff0066", "#47d147"]);
+
+    // Default value for data filter variable
+    regionSelect = '';
+    
+
+    // Function for filtering Dataset which is already filtered by year, 
+    // further by region passed by the legend()
+    function regionFilter(value) {
+
+        if (regionSelect == '')
+            return value;
+        else
+            s = value.Region;
+        return (s.includes(regionSelect));
+    }
+
+    // Function which passes value into regionSelect variable which inturn filters data by region
+    function legend(value) {
+        regionSelect = value;
+        generateChart();
+    }
+
+    //Function that draws the chart
+    function generateChart() {
+    	// Filtering by Year
+        var filtered_dataset = dataset.filter(yearFilter);
+        // Filtering by Region
+        var filtered_dataset = filtered_dataset.filter(regionFilter);
+
+        /******** PERFORM DATA JOIN ************/
+        var circles = svg.selectAll(".data_circles")
+            .data(filtered_dataset, function key(d) {
+                return d.Country
+            });
+
+        /******** HANDLE UPDATE SELECTION ************/
+
+        circles.transition()
+            .duration(1000)
+            .ease("linear")
+            .attr("cx", function(d) {
+                return xScale(+d.GDP);
+            })
+            .attr("cy", function(d) {
+                return yScale(+d.LifeExp);
+            })
+            .attr("r", function(d) {
+                return rScale(+d.Population);
+            })
+            .style("stroke", "black")
+            .style("stroke-width", 1)
+            .attr("opacity", 1)
+            .style("stroke-opacity", 0.3)
+            .attr("fill", function(d) {
+                return fill(d.Region);
+            });
+
+        //Text label for Year in background
+        svg.select("#year")
+            .attr("y", svg_height / 1.5)
+            .attr("x", svg_width / 2)
+            .style("text-anchor", "middle")
+            .attr("class", "year")
+            .text(display_year);
+
+
+        /******** HANDLE ENTER SELECTION ************/
+        // Create new elements in the dataset
+
+
+
+        circles.enter()
+            .append("circle")
+            .attr("class", "data_circles")
+            .attr("cx", function(d) {
+                return xScale(+d.GDP);
+            })
+            .attr("cy", function(d) {
+                return yScale(+d.LifeExp);
+            })
+            .attr("r", function(d) {
+                return rScale(+d.Population);
+            })
+            .attr("stroke-opacity", 0.3)
+            .attr("fill", function(d) {
+                return fill(d.Region);
+            })
+            .attr("opacity", 1)
+            .style("stroke", "black");
+
+
+
+
+        // What to do when we mouse over a bubble
+        var mouseOn = function() {
+            var circle = d3.select(this);
+
+            // Transition to increase size/opacity of bubble
+            circle.transition()
+                .duration(800).style("opacity", 1)
+                .attr("r", 16).ease("elastic");
+            circle.append("title")
+                .text(function(d) {
+                    return d.Country
+                });
+
+            // Append lines to bubbles that will be used to show the precise data markings.
+            // Translate their location based on margins
+            svg.append("g")
+                .attr("class", "guide")
+                .append("line")
+                .attr("x1", circle.attr("cx") - 40)
+                .attr("x2", circle.attr("cx") - 40)
+                .attr("y1", circle.attr("cy") - 5)
+                .attr("y2", svg_height - 20)
+                .attr("transform", "translate(40,20)")
+                .style("stroke", circle.style("fill"))
+                .transition().delay(200).duration(400).styleTween("opacity",
+                    function() {
+                        return d3.interpolate(0, .5);
+                    })
+
+            svg.append("g")
+                .attr("class", "guide")
+                .append("line")
+                .attr("x1", circle.attr("cx") - 55)
+                .attr("x2", 0 - margin.left + 10)
+                .attr("y1", circle.attr("cy") - 30)
+                .attr("y2", circle.attr("cy") - 30)
+                .attr("transform", "translate(40,30)")
+                .style("stroke", circle.style("fill"))
+                .transition().delay(200).duration(400).styleTween("opacity",
+                    function() {
+                        return d3.interpolate(0, .5);
+                    })
+
+            // function to move mouseover item to front of SVG stage, in case
+            // another bubble overlaps it
+            d3.selection.prototype.moveToFront = function() {
+                return this.each(function() {
+                    this.parentNode.appendChild(this);
+                });
+            };
+
+        };
+
+        var mouseOff = function() {
+            var circle = d3.select(this);
+
+            // go back to original size and opacity
+            circle.transition()
+                .duration(800)
+                .ease("elastic");
+
+            // fade out guide lines, then remove them
+            d3.selectAll(".guide").transition()
+                .duration(100).styleTween("opacity", function() {
+                    return d3.interpolate(.5, 0);
+                })
+                .remove()
+            generateChart();
+        };
+
+        // run the mouseon/out functions
+        circles.on("mouseover", mouseOn);
+        circles.on("mouseout", mouseOff);
+
+
+        /******** HANDLE EXIT SELECTION ************/
+        circles.exit()
+            .remove();
+
+    }
+
+    // Read file and call generateChart() function
+    d3.csv("./Gapminder_All_Time.csv", function(error, data) {
+        if (error) {
+            console.log("Something went wrong");
+        } else {
+            console.log("Data has been loaded");
+            dataset = data;
+            generateChart();
+        }
+    });
+
+
+    // Add an on-click event handler to each button that updates the display year
+    d3.selectAll(".pause_button")
+        .on("click", function(d) {
+            // If the user selectes a specifc year then stop loopping if it is in action
+            clearInterval(playInterval);
+        });
+
+    // A global variable for the interval listeneer so that it can be stopped elsewhere
+    var playInterval;
+    // Add an event listener to the play all button do that when it is clicked the visualisaiton iterates through the different years
+    d3.select(".play_button")
+        .on("click", function() {
+
+            // Set up the interval callback
+            playInterval = setInterval(function() {
+                // Increments display_year to higher multiple of 10 if under 150, after that increments by 1
+                if (display_year < 1950) {
+                    for (var i = display_year % 10; i < 10; i++) {
+                        display_year++;
+                    }
+                } else {
+                    display_year++;
+                }
+
+                if (display_year > 2015) {
+                    display_year = 1900;
+                }
+
+                document.getElementById("year").value = display_year;
+                generateChart();
+            }, 500);
+        });
+
+    // Changing the year in background and hiding/showing buttons on changing slider with mouse
+    function sliderchange(value) {
+        document.getElementById("pause").style.visibility = "hidden";
+        document.getElementById("play").style.visibility = "visible";
+        display_year = value;
+        generateChart();
+        clearInterval(playInterval);
+        document.getElementById("reset").style.visibility = "visible";
+    }
+</script>
+
+</body>
+
+</html>
